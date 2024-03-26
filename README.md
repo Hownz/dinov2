@@ -1,620 +1,411 @@
-:new: [2023-10-26] *Added DINOv2 backbones with registers, following [Vision Transformers Need Registers](https://arxiv.org/abs/2309.16588).*
+:new: *Please check out our more recent [DINOv2](https://github.com/facebookresearch/dinov2) effort in the same line of work.*
 
-# DINOv2: Learning Robust Visual Features without Supervision
+# Self-Supervised Vision Transformers with DINO
 
-**[Meta AI Research, FAIR](https://ai.facebook.com/research/)**
-
-Maxime Oquab,
-Timothée Darcet,
-Théo Moutakanni,
-Huy V. Vo,
-Marc Szafraniec,
-Vasil Khalidov,
-Patrick Labatut,
-Armand Joulin,
-Piotr Bojanowski
-
-[[`Paper #1`](https://arxiv.org/abs/2304.07193)] [`Paper #2`](https://arxiv.org/abs/2309.16588)] [[`Blog`](https://ai.facebook.com/blog/dino-v2-computer-vision-self-supervised-learning/)] [[`Demo`](https://dinov2.metademolab.com)] [[`BibTeX`](#citing-dinov2)]
-
-PyTorch implementation and pretrained models for DINOv2. For details, see the papers: **[DINOv2: Learning Robust Visual Features without Supervision](https://arxiv.org/abs/2304.07193)** and **[Vision Transformers Need Registers](https://arxiv.org/abs/2309.16588)**.
-
-DINOv2 models produce high-performance visual features that can be directly employed with classifiers as simple as linear layers on a variety of computer vision tasks; these visual features are robust and perform well across domains without any requirement for fine-tuning. The models were pretrained on a dataset of 142 M images without using any labels or annotations.
-
-https://github.com/facebookresearch/dinov2/assets/60359573/f168823e-7922-415a-b429-578badf5c356
+PyTorch implementation and pretrained models for DINO. For details, see **Emerging Properties in Self-Supervised Vision Transformers**.  
+[[`blogpost`](https://ai.facebook.com/blog/dino-paws-computer-vision-with-self-supervised-transformers-and-10x-more-efficient-training)] [[`arXiv`](https://arxiv.org/abs/2104.14294)] [[`Yannic Kilcher's video`](https://www.youtube.com/watch?v=h3ij3F3cPIk)]
 
 <div align="center">
-  Visualization of the three first principal components of the patch features of all frames, mapped to RGB values.
+  <img width="100%" alt="DINO illustration" src=".github/dino.gif">
 </div>
 
 ## Pretrained models
+You can choose to download only the weights of the pretrained backbone used for downstream tasks, or the full checkpoint which contains backbone and projection head weights for both student and teacher networks. We also provide the backbone in `onnx` format, as well as detailed arguments and training/evaluation logs. Note that `DeiT-S` and `ViT-S` names refer exactly to the same architecture.
 
-<table style="margin: auto">
-  <thead>
-    <tr>
-      <th>model</th>
-      <th># of<br />params</th>
-      <th>with<br />registers</th>
-      <th>ImageNet<br />k-NN</th>
-      <th>ImageNet<br />linear</th>
-      <th>download</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>ViT-S/14 distilled</td>
-      <td align="right">21 M</td>
-      <td align="center">:x:</td>
-      <td align="right">79.0%</td>
-      <td align="right">81.1%</td>
-      <td><a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_pretrain.pth">backbone only</a></td>
-    </tr>
-    <tr>
-      <td>ViT-S/14 distilled</td>
-      <td align="right">21 M</td>
-      <td align="center">:white_check_mark:</td>
-      <td align="right">79.1%</td>
-      <td align="right">80.9%</td>
-      <td><a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_reg4_pretrain.pth">backbone only</a></td>
-    </tr>
-    <tr>
-      <td>ViT-B/14 distilled</td>
-      <td align="right">86 M</td>
-      <td align="center">:x:</td>
-      <td align="right">82.1%</td>
-      <td align="right">84.5%</td>
-      <td><a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitb14/dinov2_vitb14_pretrain.pth">backbone only</a></td>
-    </tr>
-    <tr>
-      <td>ViT-B/14 distilled</td>
-      <td align="right">86 M</td>
-      <td align="center">:white_check_mark:</td>
-      <td align="right">82.0%</td>
-      <td align="right">84.6%</td>
-      <td><a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitb14/dinov2_vitb14_reg4_pretrain.pth">backbone only</a></td>
-    </tr>
-    <tr>
-      <td>ViT-L/14 distilled</td>
-      <td align="right">300 M</td>
-      <td align="center">:x:</td>
-      <td align="right">83.5%</td>
-      <td align="right">86.3%</td>
-      <td><a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitl14/dinov2_vitl14_pretrain.pth">backbone only</a></td>
-    </tr>
-    <tr>
-      <td>ViT-L/14 distilled</td>
-      <td align="right">300 M</td>
-      <td align="center">:white_check_mark:</td>
-      <td align="right">83.8%</td>
-      <td align="right">86.7%</td>
-      <td><a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitl14/dinov2_vitl14_reg4_pretrain.pth">backbone only</a></td>
-    </tr>
-    <tr>
-      <td>ViT-g/14</td>
-      <td align="right">1,100 M</td>
-      <td align="center">:x:</td>
-      <td align="right">83.5%</td>
-      <td align="right">86.5%</td>
-      <td><a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitg14/dinov2_vitg14_pretrain.pth">backbone only</a></td>
-    </tr>
-    <tr>
-      <td>ViT-g/14</td>
-      <td align="right">1,100 M</td>
-      <td align="center">:white_check_mark:</td>
-      <td align="right">83.7%</td>
-      <td align="right">87.1%</td>
-      <td><a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitg14/dinov2_vitg14_reg4_pretrain.pth">backbone only</a></td>
-    </tr>
-  </tbody>
+<table>
+  <tr>
+    <th>arch</th>
+    <th>params</th>
+    <th>k-nn</th>
+    <th>linear</th>
+    <th colspan="6">download</th>
+  </tr>
+  <tr>
+    <td>ViT-S/16</td>
+    <td>21M</td>
+    <td>74.5%</td>
+    <td>77.0%</td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_deitsmall16_pretrain/dino_deitsmall16_pretrain.pth">backbone only</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_deitsmall16_pretrain/dino_deitsmall16_pretrain_full_checkpoint.pth">full ckpt</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_deitsmall16_pretrain/dino_deits16.onnx">onnx</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_deitsmall16_pretrain/args.txt">args</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_deitsmall16_pretrain/dino_deitsmall16_pretrain_log.txt">logs</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_deitsmall16_pretrain/dino_deitsmall16_pretrain_eval_linear_log.txt">eval logs</a></td>
+  </tr>
+  <tr>
+    <td>ViT-S/8</td>
+    <td>21M</td>
+    <td>78.3%</td>
+    <td>79.7%</td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_deitsmall8_pretrain/dino_deitsmall8_pretrain.pth">backbone only</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_deitsmall8_pretrain/dino_deitsmall8_pretrain_full_checkpoint.pth">full ckpt</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_deitsmall8_pretrain/dino_deits8.onnx">onnx</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_deitsmall8_pretrain/args.txt">args</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_deitsmall8_pretrain/dino_deitsmall8_pretrain_log.txt">logs</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_deitsmall8_pretrain/dino_deitsmall8_pretrain_eval_linear_log.txt">eval logs</a></td>
+  </tr>
+  <tr>
+    <td>ViT-B/16</td>
+    <td>85M</td>
+    <td>76.1%</td>
+    <td>78.2%</td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_vitbase16_pretrain/dino_vitbase16_pretrain.pth">backbone only</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_vitbase16_pretrain/dino_vitbase16_pretrain_full_checkpoint.pth">full ckpt</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_vitbase16_pretrain/dino_vitb16.onnx">onnx</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_vitbase16_pretrain/args.txt">args</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_vitbase16_pretrain/dino_vitbase16_pretrain_log.txt">logs</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_vitbase16_pretrain/dino_vitbase16_pretrain_eval_linear_log.txt">eval logs</a></td>
+  </tr>
+  <tr>
+    <td>ViT-B/8</td>
+    <td>85M</td>
+    <td>77.4%</td>
+    <td>80.1%</td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_vitbase8_pretrain/dino_vitbase8_pretrain.pth">backbone only</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_vitbase8_pretrain/dino_vitbase8_pretrain_full_checkpoint.pth">full ckpt</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_vitbase8_pretrain/dino_vitb8.onnx">onnx</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_vitbase8_pretrain/args.txt">args</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_vitbase8_pretrain/dino_vitbase8_pretrain_log.txt">logs</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_vitbase8_pretrain/dino_vitbase8_pretrain_eval_linear_log.txt">eval logs</a></td>
+  </tr>
+  <tr>
+    <td>ResNet-50</td>
+    <td>23M</td>
+    <td>67.5%</td>
+    <td>75.3%</td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_resnet50_pretrain/dino_resnet50_pretrain.pth">backbone only</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_resnet50_pretrain/dino_resnet50_pretrain_full_checkpoint.pth">full ckpt</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_resnet50_pretrain/dino_resnet50.onnx">onnx</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_resnet50_pretrain/args.txt">args</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_resnet50_pretrain/dino_resnet50_pretrain_log.txt">logs</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_resnet50_pretrain/dino_resnet50_pretrain_eval_linear_log.txt">eval logs</a></td>
+  </tr>
 </table>
 
-### Pretrained backbones (via PyTorch Hub)
+We also release XCiT models ([[`arXiv`](https://arxiv.org/abs/2106.09681)] [[`code`](https://github.com/facebookresearch/xcit)]) trained with DINO:
+<table>
+  <tr>
+    <th>arch</th>
+    <th>params</th>
+    <th>k-nn</th>
+    <th>linear</th>
+    <th colspan="5">download</th>
+  </tr>
+  <tr>
+    <td>xcit_small_12_p16</td>
+    <td>26M</td>
+    <td>76.0%</td>
+    <td>77.8%</td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_xcit_small_12_p16_pretrain/dino_xcit_small_12_p16_pretrain.pth">backbone only</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_xcit_small_12_p16_pretrain/dino_xcit_small_12_p16_pretrain_full_checkpoint.pth">full ckpt</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_xcit_small_12_p16_pretrain/args.txt">args</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_xcit_small_12_p16_pretrain/dino_xcit_small_12_p16_pretrain_log.txt">logs</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_xcit_small_12_p16_pretrain/dino_xcit_small_12_p16_pretrain_eval_linear_log.txt">eval</a></td>
+  </tr>
+  <tr>
+    <td>xcit_small_12_p8</td>
+    <td>26M</td>
+    <td>77.1%</td>
+    <td>79.2%</td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_xcit_small_12_p8_pretrain/dino_xcit_small_12_p8_pretrain.pth">backbone only</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_xcit_small_12_p8_pretrain/dino_xcit_small_12_p8_pretrain_full_checkpoint.pth">full ckpt</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_xcit_small_12_p8_pretrain/args.txt">args</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_xcit_small_12_p8_pretrain/dino_xcit_small_12_p8_pretrain_log.txt">logs</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_xcit_small_12_p8_pretrain/dino_xcit_small_12_p8_pretrain_eval_linear_log.txt">eval</a></td>
+  </tr>
+  <tr>
+    <td>xcit_medium_24_p16</td>
+    <td>84M</td>
+    <td>76.4%</td>
+    <td>78.8%</td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_xcit_medium_24_p16_pretrain/dino_xcit_medium_24_p16_pretrain.pth">backbone only</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_xcit_medium_24_p16_pretrain/dino_xcit_medium_24_p16_pretrain_full_checkpoint.pth">full ckpt</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_xcit_medium_24_p16_pretrain/args.txt">args</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_xcit_medium_24_p16_pretrain/dino_xcit_medium_24_p16_pretrain_log.txt">logs</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_xcit_medium_24_p16_pretrain/dino_xcit_medium_24_p16_pretrain_eval_linear_log.txt">eval</a></td>
+  </tr>
+  <tr>
+    <td>xcit_medium_24_p8</td>
+    <td>84M</td>
+    <td>77.9%</td>
+    <td>80.3%</td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_xcit_medium_24_p8_pretrain/dino_xcit_medium_24_p8_pretrain.pth">backbone only</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_xcit_medium_24_p8_pretrain/dino_xcit_medium_24_p8_pretrain_full_checkpoint.pth">full ckpt</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_xcit_medium_24_p8_pretrain/args.txt">args</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_xcit_medium_24_p8_pretrain/dino_xcit_medium_24_p8_pretrain_log.txt">logs</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_xcit_medium_24_p8_pretrain/dino_xcit_medium_24_p8_pretrain_eval_linear_log.txt">eval</a></td>
+  </tr>
+</table>
 
-Please follow the instructions [here](https://pytorch.org/get-started/locally/) to install PyTorch (the only required dependency for loading the model). Installing PyTorch with CUDA support is strongly recommended.
-
-A corresponding [model card](MODEL_CARD.md) is included in the repository.
-
+### Pretrained models on PyTorch Hub
 ```python
 import torch
-
-# DINOv2
-dinov2_vits14 = torch.hub.load('facebookresearch/dinov2', 'dinov2_vits14')
-dinov2_vitb14 = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitb14')
-dinov2_vitl14 = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitl14')
-dinov2_vitg14 = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitg14')
-
-# DINOv2 with registers
-dinov2_vits14_reg = torch.hub.load('facebookresearch/dinov2', 'dinov2_vits14_reg')
-dinov2_vitb14_reg = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitb14_reg')
-dinov2_vitl14_reg = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitl14_reg')
-dinov2_vitg14_reg = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitg14_reg')
+vits16 = torch.hub.load('facebookresearch/dino:main', 'dino_vits16')
+vits8 = torch.hub.load('facebookresearch/dino:main', 'dino_vits8')
+vitb16 = torch.hub.load('facebookresearch/dino:main', 'dino_vitb16')
+vitb8 = torch.hub.load('facebookresearch/dino:main', 'dino_vitb8')
+xcit_small_12_p16 = torch.hub.load('facebookresearch/dino:main', 'dino_xcit_small_12_p16')
+xcit_small_12_p8 = torch.hub.load('facebookresearch/dino:main', 'dino_xcit_small_12_p8')
+xcit_medium_24_p16 = torch.hub.load('facebookresearch/dino:main', 'dino_xcit_medium_24_p16')
+xcit_medium_24_p8 = torch.hub.load('facebookresearch/dino:main', 'dino_xcit_medium_24_p8')
+resnet50 = torch.hub.load('facebookresearch/dino:main', 'dino_resnet50')
 ```
-
-### Pretrained heads - Image classification
-
-<table style="margin: auto">
-  <thead>
-    <tr>
-      <th rowspan="2">backbone</th>
-      <th rowspan="2">with<br />registers</th>
-      <th>download</th>
-    </tr>
-    <tr>
-      <th>ImageNet</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>ViT-S/14 distilled</td>
-      <td align="center">:x:</td>
-      <td>
-        linear head (<a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_linear_head.pth">1 layer</a>,
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_linear4_head.pth">4 layers</a>)
-      </td>
-    </tr>
-    <tr>
-      <td>ViT-S/14 distilled</td>
-      <td align="center">:white_check_mark:</td>
-      <td>
-        linear head (<a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_reg4_linear_head.pth">1 layer</a>,
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_reg4_linear4_head.pth">4 layers</a>)
-      </td>
-    </tr>
-    <tr>
-      <td>ViT-B/14 distilled</td>
-      <td align="center">:x:</td>
-      <td>
-        linear head (<a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitb14/dinov2_vitb14_linear_head.pth">1 layer</a>,
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitb14/dinov2_vitb14_linear4_head.pth">4 layers</a>)
-    </tr>
-    <tr>
-      <td>ViT-B/14 distilled</td>
-      <td align="center">:white_check_mark:</td>
-      <td>
-        linear head (<a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitb14/dinov2_vitb14_reg4_linear_head.pth">1 layer</a>,
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitb14/dinov2_vitb14_reg4_linear4_head.pth">4 layers</a>)
-    </tr>
-    <tr>
-      <td>ViT-L/14 distilled</td>
-      <td align="center">:x:</td>
-      <td>
-        linear head (<a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitl14/dinov2_vitl14_linear_head.pth">1 layer</a>,
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitl14/dinov2_vitl14_linear4_head.pth">4 layers</a>)
-    </tr>
-    <tr>
-      <td>ViT-L/14 distilled</td>
-      <td align="center">:white_check_mark:</td>
-      <td>
-        linear head (<a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitl14/dinov2_vitl14_reg4_linear_head.pth">1 layer</a>,
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitl14/dinov2_vitl14_reg4_linear4_head.pth">4 layers</a>)
-    </tr>
-    <tr>
-      <td>ViT-g/14</td>
-      <td align="center">:x:</td>
-      <td>
-        linear head (<a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitg14/dinov2_vitg14_linear_head.pth">1 layer</a>,
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitg14/dinov2_vitg14_linear4_head.pth">4 layers</a>)
-    </tr>
-    <tr>
-      <td>ViT-g/14</td>
-      <td align="center">:white_check_mark:</td>
-      <td>
-        linear head (<a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitg14/dinov2_vitg14_lreg4_inear_head.pth">1 layer</a>,
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitg14/dinov2_vitg14_reg4_linear4_head.pth">4 layers</a>)
-    </tr>
-  </tbody>
-</table>
-
-The (full) classifier models can be loaded via PyTorch Hub:
-
-```python
-import torch
-
-# DINOv2
-dinov2_vits14_lc = torch.hub.load('facebookresearch/dinov2', 'dinov2_vits14_lc')
-dinov2_vitb14_lc = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitb14_lc')
-dinov2_vitl14_lc = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitl14_lc')
-dinov2_vitg14_lc = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitg14_lc')
-
-# DINOv2 with registers
-dinov2_vits14_reg_lc = torch.hub.load('facebookresearch/dinov2', 'dinov2_vits14_reg_lc')
-dinov2_vitb14_reg_lc = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitb14_reg_lc')
-dinov2_vitl14_reg_lc = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitl14_reg_lc')
-dinov2_vitg14_reg_lc = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitg14_reg_lc')
-```
-
-### Pretrained heads - Depth estimation
-
-<table style="margin: auto">
-  <thead>
-    <tr>
-      <th rowspan="2">backbone</th>
-      <th colspan="2">download head</th>
-    </tr>
-    <tr>
-      <th>NYUd</th>
-      <th>KITTI</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>ViT-S/14 distilled</td>
-      <td>
-        linear (<a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_nyu_linear_head.pth">1 layer</a>,
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_nyu_linear4_head.pth">4 layers</a>),
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_nyu_dpt_head.pth">DPT</a>
-      </td>
-      <td>
-        linear (<a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_kitti_linear_head.pth">1 layer</a>,
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_kitti_linear4_head.pth">4 layers</a>),
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_kitti_dpt_head.pth">DPT</a>
-      </td>
-    </tr>
-    <tr>
-      <td>ViT-B/14 distilled</td>
-      <td>
-        linear (<a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitb14/dinov2_vitb14_linear_head.pth">1 layer</a>,
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitb14/dinov2_vitb14_nyu_linear4_head.pth">4 layers</a>),
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitb14/dinov2_vitb14_nyu_dpt_head.pth">DPT</a>
-      </td>
-      <td>
-        linear (<a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitb14/dinov2_vitb14_kitti_linear_head.pth">1 layer</a>,
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitb14/dinov2_vitb14_kitti_linear4_head.pth">4 layers</a>),
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitb14/dinov2_vitb14_kitti_dpt_head.pth">DPT</a>
-      </td>
-    </tr>
-    <tr>
-      <td>ViT-L/14 distilled</td>
-      <td>
-        linear (<a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitl14/dinov2_vitl14_linear_head.pth">1 layer</a>,
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitl14/dinov2_vitl14_nyu_linear4_head.pth">4 layers</a>),
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitl14/dinov2_vitl14_nyu_dpt_head.pth">DPT</a>
-      </td>
-      <td>
-        linear (<a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitl14/dinov2_vitl14_kitti_linear_head.pth">1 layer</a>,
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitl14/dinov2_vitl14_kitti_linear4_head.pth">4 layers</a>),
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitl14/dinov2_vitl14_kitti_dpt_head.pth">DPT</a>
-      </td>
-    </tr>
-    <tr>
-      <td>ViT-g/14</td>
-      <td>
-        linear (<a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitg14/dinov2_vitg14_linear_head.pth">1 layer</a>,
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitg14/dinov2_vitg14_nyu_linear4_head.pth">4 layers</a>),
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitg14/dinov2_vitg14_nyu_dpt_head.pth">DPT</a>
-      </td>
-      <td>
-        linear (<a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitg14/dinov2_vitg14_kitti_linear_head.pth">1 layer</a>,
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitg14/dinov2_vitg14_kitti_linear4_head.pth">4 layers</a>),
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitg14/dinov2_vitg14_kitti_dpt_head.pth">DPT</a>
-      </td>
-    </tr>
-  </tbody>
-</table>
-
-### Pretrained heads - Semantic segmentation
-
-<table style="margin: auto">
-  <thead>
-    <tr>
-      <th rowspan="2">backbone</th>
-      <th>download model</th>
-      <th colspan="2">download head</th>
-    </tr>
-    <tr>
-      <th>ADE20K</th>
-      <th>ADE20K</th>
-      <th>VOC2012</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>ViT-S/14 distilled</td>
-      <td></td>
-      <td>
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_ade20k_linear_head.pth">linear</a>,
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_ade20k_ms_head.pth">multi-scale</a>
-      </td>
-      <td>
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_voc2012_linear_head.pth">linear</a>,
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_voc2012_ms_head.pth">multi-scale</a>
-      </td>
-    </tr>
-    <tr>
-      <td>ViT-B/14 distilled</td>
-      <td></td>
-      <td>
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitb14/dinov2_vitb14_ade20k_linear_head.pth">linear</a>,
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitb14/dinov2_vitb14_ade20k_ms_head.pth">multi-scale</a>
-      </td>
-      <td>
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitb14/dinov2_vitb14_voc2012_linear_head.pth">linear</a>,
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitb14/dinov2_vitb14_voc2012_ms_head.pth">multi-scale</a>
-      </td>
-    </tr>
-    <tr>
-      <td>ViT-L/14 distilled</td>
-      <td></td>
-      <td>
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitl14/dinov2_vitl14_ade20k_linear_head.pth">linear</a>,
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitl14/dinov2_vitl14_ade20k_ms_head.pth">multi-scale</a>
-      </td>
-      <td>
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitl14/dinov2_vitl14_voc2012_linear_head.pth">linear</a>,
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitl14/dinov2_vitl14_voc2012_ms_head.pth">multi-scale</a>
-      </td>
-    </tr>
-    <tr>
-      <td>ViT-g/14</td>
-      <td>
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitg14/dinov2_vitg14_ade20k_m2f.pth">Mask2Former</a>
-      </td>
-      <td>
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitg14/dinov2_vitg14_ade20k_linear_head.pth">linear</a>,
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitg14/dinov2_vitg14_ade20k_ms_head.pth">multi-scale</a>
-      </td>
-      <td>
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitg14/dinov2_vitg14_voc2012_linear_head.pth">linear</a>,
-        <a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitg14/dinov2_vitg14_voc2012_ms_head.pth">multi-scale</a>
-      </td>
-    </tr>
-  </tbody>
-</table>
-
-## Installation
-
-The training and evaluation code requires PyTorch 2.0 and [xFormers](https://github.com/facebookresearch/xformers) 0.0.18 as well as a number of other 3rd party packages. Note that the code has only been tested with the specified versions and also expects a Linux environment. To setup all the required dependencies for training and evaluation, please follow the instructions below:
-
-*[conda](https://docs.conda.io/projects/conda/en/latest/user-guide/getting-started.html)* **(Recommended)** - Clone the repository and then create and activate a `dinov2` conda environment using the provided environment definition:
-
-```shell
-conda env create -f conda.yaml
-conda activate dinov2
-```
-
-*[pip](https://pip.pypa.io/en/stable/getting-started/)* - Clone the repository and then use the provided `requirements.txt` to install the dependencies:
-
-```shell
-pip install -r requirements.txt
-```
-
-For dense tasks (depth estimation and semantic segmentation), there are additional dependencies (specific versions of `mmcv` and `mmsegmentation`) which are captured in the `extras` dependency specifications:
-
-*[conda](https://docs.conda.io/projects/conda/en/latest/user-guide/getting-started.html)* **(Recommended)**:
-
-```shell
-conda env create -f conda-extras.yaml
-conda activate dinov2-extras
-```
-
-*[pip](https://pip.pypa.io/en/stable/getting-started/)*:
-
-```shell
-pip install -r requirements.txt -r requirements-extras.txt
-```
-
-## Data preparation
-
-### ImageNet-1k
-
-The root directory of the dataset should hold the following contents:
-
-- `<ROOT>/test/ILSVRC2012_test_00000001.JPEG`
-- `<ROOT>/test/[..]`
-- `<ROOT>/test/ILSVRC2012_test_00100000.JPEG`
-- `<ROOT>/train/n01440764/n01440764_10026.JPEG`
-- `<ROOT>/train/[...]`
-- `<ROOT>/train/n15075141/n15075141_9993.JPEG`
-- `<ROOT>/val/n01440764/ILSVRC2012_val_00000293.JPEG`
-- `<ROOT>/val/[...]`
-- `<ROOT>/val/n15075141/ILSVRC2012_val_00049174.JPEG`
-- `<ROOT>/labels.txt`
-
-The provided dataset implementation expects a few additional metadata files to be present under the extra directory:
-
-- `<EXTRA>/class-ids-TRAIN.npy`
-- `<EXTRA>/class-ids-VAL.npy`
-- `<EXTRA>/class-names-TRAIN.npy`
-- `<EXTRA>/class-names-VAL.npy`
-- `<EXTRA>/entries-TEST.npy`
-- `<EXTRA>/entries-TRAIN.npy`
-- `<EXTRA>/entries-VAL.npy`
-
-These metadata files can be generated (once) with the following lines of Python code:
-
-```python
-from dinov2.data.datasets import ImageNet
-
-for split in ImageNet.Split:
-    dataset = ImageNet(split=split, root="<ROOT>", extra="<EXTRA>")
-    dataset.dump_extra()
-```
-
-Note that the root and extra directories do not have to be distinct directories.
-
-### ImageNet-22k
-
-Please adapt the [dataset class](dinov2/data/datasets/image_net_22k.py) to match your local setup.
-
-<br />
-
-:warning: To execute the commands provided in the next sections for training and evaluation, the `dinov2` package should be included in the Python module search path, i.e. simply prefix the command to run with `PYTHONPATH=.`.
 
 ## Training
 
-### Fast setup: training DINOv2 ViT-L/16 on ImageNet-1k
-
-Run DINOv2 training on 4 A100-80GB nodes (32 GPUs) in a SLURM cluster environment with submitit:
-
-```shell
-python dinov2/run/train/train.py \
-    --nodes 4 \
-    --config-file dinov2/configs/train/vitl16_short.yaml \
-    --output-dir <PATH/TO/OUTPUT/DIR> \
-    train.dataset_path=ImageNet:split=TRAIN:root=<PATH/TO/DATASET>:extra=<PATH/TO/DATASET>
+### Documentation
+Please install [PyTorch](https://pytorch.org/) and download the [ImageNet](https://imagenet.stanford.edu/) dataset. This codebase has been developed with python version 3.6, PyTorch version 1.7.1, CUDA 11.0 and torchvision 0.8.2. The exact arguments to reproduce the models presented in our paper can be found in the `args` column of the [pretrained models section](https://github.com/facebookresearch/dino#pretrained-models). For a glimpse at the full documentation of DINO training please run:
+```
+python main_dino.py --help
 ```
 
-Training time is approximately 1 day and the resulting checkpoint should reach 81.6% on k-NN eval and 82.9% on linear eval.
-
-The training code saves the weights of the teacher in the `eval` folder every 12500 iterations for evaluation.
-
-### Long setup: training DINOv2 ViT-L/14 on ImageNet-22k
-
-Run DINOv2 training on 12 A100-80GB nodes (96 GPUs) in a SLURM cluster environment with submitit:
-
-```shell
-python dinov2/run/train/train.py \
-    --nodes 12 \
-    --config-file dinov2/configs/train/vitl14.yaml \
-    --output-dir <PATH/TO/OUTPUT/DIR> \
-    train.dataset_path=ImageNet22k:root=<PATH/TO/DATASET>:extra=<PATH/TO/DATASET>
+### Vanilla DINO training :sauropod:
+Run DINO with ViT-small network on a single node with 8 GPUs for 100 epochs with the following command. Training time is 1.75 day and the resulting checkpoint should reach 69.3% on k-NN eval and 74.0% on linear eval. We provide [training](https://dl.fbaipublicfiles.com/dino/example_runs_logs/dino_vanilla_deitsmall16_log.txt) and [linear evaluation](https://dl.fbaipublicfiles.com/dino/example_runs_logs/dino_vanilla_deitsmall16_eval.txt) logs (with batch size 256 at evaluation time) for this run to help reproducibility.
+```
+python -m torch.distributed.launch --nproc_per_node=8 main_dino.py --arch vit_small --data_path /path/to/imagenet/train --output_dir /path/to/saving_dir
 ```
 
-Training time is approximately 3.3 days and the resulting checkpoint should reach 82.0% on k-NN eval and 84.5% on linear eval.
-
-The training code saves the weights of the teacher in the `eval` folder every 12500 iterations for evaluation.
-
-
-## Evaluation
-
-The training code regularly saves the teacher weights. In order to evaluate the model, run the following evaluation on a single node:
-
-### k-NN classification on ImageNet-1k
-
-```shell
-python dinov2/run/eval/knn.py \
-    --config-file <PATH/TO/OUTPUT/DIR>/config.yaml \
-    --pretrained-weights <PATH/TO/OUTPUT/DIR>/eval/training_24999/teacher_checkpoint.pth \
-    --output-dir <PATH/TO/OUTPUT/DIR>/eval/training_24999/knn \
-    --train-dataset ImageNet:split=TRAIN:root=<PATH/TO/DATASET>:extra=<PATH/TO/DATASET> \
-    --val-dataset ImageNet:split=VAL:root=<PATH/TO/DATASET>:extra=<PATH/TO/DATASET>
+### Multi-node training
+We use Slurm and [submitit](https://github.com/facebookincubator/submitit) (`pip install submitit`). To train on 2 nodes with 8 GPUs each (total 16 GPUs):
+```
+python run_with_submitit.py --nodes 2 --ngpus 8 --arch vit_small --data_path /path/to/imagenet/train --output_dir /path/to/saving_dir
 ```
 
-### Logistic regression classification on ImageNet-1k
+<details>
+<summary>
+DINO with ViT-base network.
+</summary>
 
-```shell
-python dinov2/run/eval/log_regression.py \
-    --config-file <PATH/TO/OUTPUT/DIR>/config.yaml \
-    --pretrained-weights <PATH/TO/OUTPUT/DIR>/eval/training_24999/teacher_checkpoint.pth \
-    --output-dir <PATH/TO/OUTPUT/DIR>/eval/training_24999/logreg \
-    --train-dataset ImageNet:split=TRAIN:root=<PATH/TO/DATASET>:extra=<PATH/TO/DATASET> \
-    --val-dataset ImageNet:split=VAL:root=<PATH/TO/DATASET>:extra=<PATH/TO/DATASET>
+```
+python run_with_submitit.py --nodes 2 --ngpus 8 --use_volta32 --arch vit_base  --data_path /path/to/imagenet/train --output_dir /path/to/saving_dir
 ```
 
-### Linear classification with data augmentation on ImageNet-1k
+</details>
 
-```shell
-python dinov2/run/eval/linear.py \
-    --config-file <PATH/TO/OUTPUT/DIR>/config.yaml \
-    --pretrained-weights <PATH/TO/OUTPUT/DIR>/eval/training_24999/teacher_checkpoint.pth \
-    --output-dir <PATH/TO/OUTPUT/DIR>/eval/training_24999/linear \
-    --train-dataset ImageNet:split=TRAIN:root=<PATH/TO/DATASET>:extra=<PATH/TO/DATASET> \
-    --val-dataset ImageNet:split=VAL:root=<PATH/TO/DATASET>:extra=<PATH/TO/DATASET>
+### Boosting DINO performance :t-rex:
+You can improve the performance of the vanilla run by:
+- training for more epochs: `--epochs 300`,
+- increasing the teacher temperature: `--teacher_temp 0.07 --warmup_teacher_temp_epochs 30`.
+- removing last layer normalization (only safe with `--arch vit_small`): `--norm_last_layer false`,
+
+<details>
+<summary>
+Full command.
+</summary>
+
+```
+python run_with_submitit.py --arch vit_small --epochs 300 --teacher_temp 0.07 --warmup_teacher_temp_epochs 30 --norm_last_layer false --data_path /path/to/imagenet/train --output_dir /path/to/saving_dir
 ```
 
-We release the weights from evaluating the different models:
+</details>
 
-<table style="margin: auto">
+The resulting pretrained model should reach 73.3% on k-NN eval and 76.0% on linear eval. Training time is 2.6 days with 16 GPUs. We provide [training](https://dl.fbaipublicfiles.com/dino/example_runs_logs/dino_boost_deitsmall16_log.txt) and [linear evaluation](https://dl.fbaipublicfiles.com/dino/example_runs_logs/dino_boost_deitsmall16_eval.txt) logs (with batch size 256 at evaluation time) for this run to help reproducibility.
+
+### ResNet-50 and other convnets trainings
+This code also works for training DINO on convolutional networks, like ResNet-50 for example. We highly recommend to adapt some optimization arguments in this case. For example following is a command to train DINO on ResNet-50 on a single node with 8 GPUs for 100 epochs. We provide [training logs](https://dl.fbaipublicfiles.com/dino/example_runs_logs/dino_rn50_log.txt) and [final checkpoint](https://dl.fbaipublicfiles.com/dino/example_runs_logs/dino_rn50_checkpoint.pth) for this run.
+```
+python -m torch.distributed.launch --nproc_per_node=8 main_dino.py --arch resnet50 --optimizer sgd --lr 0.03 --weight_decay 1e-4 --weight_decay_end 1e-4 --global_crops_scale 0.14 1 --local_crops_scale 0.05 0.14 --data_path /path/to/imagenet/train --output_dir /path/to/saving_dir
+```
+
+## Self-attention visualization
+You can look at the self-attention of the [CLS] token on the different heads of the last layer by running:
+```
+python visualize_attention.py
+```
+
+<div align="center">
+  <img width="100%" alt="Self-attention from a Vision Transformer with 8x8 patches trained with DINO" src=".github/attention_maps.png">
+</div>
+
+## Self-attention video generation
+You can generate videos like the one on the blog post with `video_generation.py`.
+
+https://user-images.githubusercontent.com/46140458/116817761-47885e80-ab68-11eb-9975-d61d5a919e13.mp4
+
+Extract frames from input video and generate attention video:
+```
+python video_generation.py  --pretrained_weights dino_deitsmall8_pretrain.pth \
+    --input_path input/video.mp4 \
+    --output_path output/ \
+    --fps 25
+```
+
+Use folder of frames already extracted and generate attention video:
+```
+python video_generation.py  --pretrained_weights dino_deitsmall8_pretrain.pth \
+    --input_path output/frames/ \
+    --output_path output/ \
+    --resize 256 \
+```
+
+Only generate video from folder of attention maps images:
+```
+python video_generation.py --input_path output/attention \
+    --output_path output/ \
+    --video_only \
+    --video_format avi
+```
+
+
+## Evaluation: k-NN classification on ImageNet
+To evaluate a simple k-NN classifier with a single GPU on a pre-trained model, run:
+```
+python -m torch.distributed.launch --nproc_per_node=1 eval_knn.py --data_path /path/to/imagenet
+```
+If you choose not to specify `--pretrained_weights`, then DINO reference weights are used by default. If you want instead to evaluate checkpoints from a run of your own, you can run for example:
+```
+python -m torch.distributed.launch --nproc_per_node=1 eval_knn.py --pretrained_weights /path/to/checkpoint.pth --checkpoint_key teacher --data_path /path/to/imagenet 
+```
+
+## Evaluation: Linear classification on ImageNet
+To train a supervised linear classifier on frozen weights on a single node with 8 gpus, run:
+```
+python -m torch.distributed.launch --nproc_per_node=8 eval_linear.py --data_path /path/to/imagenet
+```
+
+We release the logs and weights from evaluating the different models:
+
+<table>
   <tr>
-    <th>model</th>
-    <th>with<br />registers</th>
-    <th>ImageNet<br />top-1</th>
-    <th>linear evaluation</th>
+    <th>arch</th>
+    <th>top-1 ImageNet</th>
+    <th colspan="2">linear evaluation</th>
   </tr>
   <tr>
-    <td>ViT-S/14 distilled</td>
-    <td align="center">:x:</td>
-    <td align="right">81.1%</td>
-    <td><a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_linear_head.pth">linear head weights</a></td>
+    <td>ViT-S/16</td>
+    <td>77.0%</td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_deitsmall16_pretrain/dino_deitsmall16_linearweights.pth">linear weights</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_deitsmall16_pretrain/dino_deitsmall16_pretrain_eval_linear_log.txt">logs</a></td>
   </tr>
   <tr>
-    <td>ViT-S/14 distilled</td>
-    <td align="center">:white_check_mark:</td>
-    <td align="right">80.8%</td>
-    <td><a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_reg4_linear_head.pth">linear head weights</a></td>
+    <td>ViT-S/8</td>
+    <td>79.7%</td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_deitsmall8_pretrain/dino_deitsmall8_linearweights.pth">linear weights</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_deitsmall8_pretrain/dino_deitsmall8_pretrain_eval_linear_log.txt">logs</a></td>
   </tr>
   <tr>
-    <td>ViT-B/14 distilled</td>
-    <td align="center">:x:</td>
-    <td align="right">84.5%</td>
-    <td><a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitb14/dinov2_vitb14_linear_head.pth">linear head weights</a></td>
+    <td>ViT-B/16</td>
+    <td>78.2%</td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_vitbase16_pretrain/dino_vitbase16_linearweights.pth">linear weights</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_vitbase16_pretrain/dino_vitbase16_pretrain_eval_linear_log.txt">logs</a></td>
   </tr>
   <tr>
-    <td>ViT-B/14 distilled</td>
-    <td align="center">:white_check_mark:</td>
-    <td align="right">84.4%</td>
-    <td><a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitb14/dinov2_vitb14_reg4_linear_head.pth">linear head weights</a></td>
+    <td>ViT-B/8</td>
+    <td>80.1%</td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_vitbase8_pretrain/dino_vitbase8_linearweights.pth">linear weights</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_vitbase8_pretrain/dino_vitbase8_pretrain_eval_linear_log.txt">logs</a></td>
   </tr>
   <tr>
-    <td>ViT-L/14 distilled</td>
-    <td align="center">:x:</td>
-    <td align="right">86.3%</td>
-    <td><a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitl14/dinov2_vitl14_linear_head.pth">linear head weights</a></td>
+    <td>xcit_small_12_p16</td>
+    <td>77.8%</td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_xcit_small_12_p16_pretrain/dino_xcit_small_12_p16_linearweights.pth">linear weights</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_xcit_small_12_p16_pretrain/dino_xcit_small_12_p16_pretrain_eval_linear_log.txt">logs</a></td>
   </tr>
   <tr>
-    <td>ViT-L/14 distilled</td>
-    <td align="center">:white_check_mark:</td>
-    <td align="right">86.5%</td>
-    <td><a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitl14/dinov2_vitl14_reg4_linear_head.pth">linear head weights</a></td>
+    <td>xcit_small_12_p8</td>
+    <td>79.2%</td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_xcit_small_12_p8_pretrain/dino_xcit_small_12_p8_linearweights.pth">linear weights</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_xcit_small_12_p8_pretrain/dino_xcit_small_12_p8_pretrain_eval_linear_log.txt">logs</a></td>
   </tr>
   <tr>
-    <td>ViT-g/14</td>
-    <td align="center">:x:</td>
-    <td align="right">86.5%</td>
-    <td><a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitg14/dinov2_vitg14_linear_head.pth">linear head weights</a></td>
+    <td>xcit_medium_24_p16</td>
+    <td>78.8%</td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_xcit_medium_24_p16_pretrain/dino_xcit_medium_24_p16_linearweights.pth">linear weights</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_xcit_medium_24_p16_pretrain/dino_xcit_medium_24_p16_pretrain_eval_linear_log.txt">logs</a></td>
   </tr>
   <tr>
-    <td>ViT-g/14</td>
-    <td align="center">:white_check_mark:</td>
-    <td align="right">87.0%</td>
-    <td><a href="https://dl.fbaipublicfiles.com/dinov2/dinov2_vitg14/dinov2_vitg14_reg4_linear_head.pth">linear head weights</a></td>
+    <td>xcit_medium_24_p8</td>
+    <td>80.3%</td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_xcit_medium_24_p8_pretrain/dino_xcit_medium_24_p8_linearweights.pth">linear weights</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_xcit_medium_24_p8_pretrain/dino_xcit_medium_24_p8_pretrain_eval_linear_log.txt">logs</a></td>
+  </tr>
+  <tr>
+    <td>ResNet-50</td>
+    <td>75.3%</td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_resnet50_pretrain/dino_resnet50_linearweights.pth">linear weights</a></td>
+    <td><a href="https://dl.fbaipublicfiles.com/dino/dino_resnet50_pretrain/dino_resnet50_pretrain_eval_linear_log.txt">logs</a></td>
   </tr>
 </table>
 
-The performance of the provided pretrained model weights can be evaluated as follows on ImageNet-1k:
-
-```shell
-python dinov2/run/eval/linear.py \
-    --config-file dinov2/configs/eval/vitg14_pretrain.yaml \
-    --pretrained-weights https://dl.fbaipublicfiles.com/dinov2/dinov2_vitg14/dinov2_vitg14_pretrain.pth \
-    --train-dataset ImageNet:split=TRAIN:root=<PATH/TO/DATASET>:extra=<PATH/TO/DATASET> \
-    --val-dataset ImageNet:split=VAL:root=<PATH/TO/DATASET>:extra=<PATH/TO/DATASET>
+You can check the performance of the pretrained weights on ImageNet validation set by running the following command lines:
+```
+python eval_linear.py --evaluate --arch vit_small --patch_size 16 --data_path /path/to/imagenet/train
 ```
 
-## Notebooks
+```
+python eval_linear.py --evaluate --arch vit_small --patch_size 8 --data_path /path/to/imagenet/train
+```
 
-A few notebooks are provided to help the community leverage the models and code:
+```
+python eval_linear.py --evaluate --arch vit_base --patch_size 16 --n_last_blocks 1 --avgpool_patchtokens true --data_path /path/to/imagenet/train
+```
 
-<ul>
-  <li><a href="https://github.com/facebookresearch/dinov2/blob/main/notebooks/depth_estimation.ipynb">Depth estimation</a> - How to load and use the depth heads in combination with a matching backbone via mmcv</li>
-  <li><a href="https://github.com/facebookresearch/dinov2/blob/main/notebooks/semantic_segmentation.ipynb">Semantic segmentation</a> - How to load and use the segmentation heads in combination with a matching backbone via mmcv, and also how to load and use the Mask2Former-based segmentation model trained on ADE20K</li>
-</ul>
+```
+python eval_linear.py --evaluate --arch vit_base --patch_size 8 --n_last_blocks 1 --avgpool_patchtokens true --data_path /path/to/imagenet/train
+```
+
+```
+python eval_linear.py --evaluate --arch resnet50 --data_path /path/to/imagenet/train
+```
+
+## Evaluation: DAVIS 2017 Video object segmentation
+Please verify that you're using pytorch version 1.7.1 since we are not able to reproduce the results with most recent pytorch 1.8.1 at the moment.
+
+**Step 1: Prepare DAVIS 2017 data**  
+```
+cd $HOME
+git clone https://github.com/davisvideochallenge/davis-2017 && cd davis-2017
+./data/get_davis.sh
+```
+
+**Step 2: Video object segmentation**  
+```
+python eval_video_segmentation.py --data_path $HOME/davis-2017/DAVIS/ --output_dir /path/to/saving_dir
+```
+
+**Step 3: Evaluate the obtained segmentation**  
+```
+git clone https://github.com/davisvideochallenge/davis2017-evaluation $HOME/davis2017-evaluation
+python $HOME/davis2017-evaluation/evaluation_method.py --task semi-supervised --results_path /path/to/saving_dir --davis_path $HOME/davis-2017/DAVIS/
+```
+
+## Evaluation: Image Retrieval on revisited Oxford and Paris
+Step 1: Prepare revisited Oxford and Paris by following [this repo](https://github.com/filipradenovic/revisitop).
+
+Step 2: Image retrieval (if you do not specify weights with `--pretrained_weights` then by default [DINO weights pretrained on Google Landmark v2 dataset](https://dl.fbaipublicfiles.com/dino/dino_vitsmall16_googlelandmark_pretrain/dino_vitsmall16_googlelandmark_pretrain.pth) will be used).
+
+Paris:
+```
+python -m torch.distributed.launch --use_env --nproc_per_node=1 eval_image_retrieval.py --imsize 512 --multiscale 1 --data_path /path/to/revisited_paris_oxford/ --dataset rparis6k
+```
+
+Oxford:
+```
+python -m torch.distributed.launch --use_env --nproc_per_node=1 eval_image_retrieval.py --imsize 224 --multiscale 0 --data_path /path/to/revisited_paris_oxford/ --dataset roxford5k
+```
+
+## Evaluation: Copy detection on Copydays
+Step 1: Prepare [Copydays dataset](https://lear.inrialpes.fr/~jegou/data.php#copydays).
+
+Step 2 (opt): Prepare a set of image distractors and a set of images on which to learn the whitening operator.
+In our paper, we use 10k random images from YFCC100M as distractors and 20k random images from YFCC100M (different from the distractors) for computing the whitening operation.
+
+Step 3: Run copy detection:
+```
+python -m torch.distributed.launch --use_env --nproc_per_node=1 eval_copy_detection.py --data_path /path/to/copydays/ --whitening_path /path/to/whitening_data/ --distractors_path /path/to/distractors/
+```
+We report result on the strong subset. For example in the stdout from the command above we get: `eval on strong mAP=0.858`.
 
 ## License
+This repository is released under the Apache 2.0 license as found in the [LICENSE](LICENSE) file.
 
-DINOv2 code and model weights are released under the Apache License 2.0. See [LICENSE](LICENSE) for additional details.
-
-## Contributing
-
-See [contributing](CONTRIBUTING.md) and the [code of conduct](CODE_OF_CONDUCT.md).
-
-## Citing DINOv2
-
+## Citation
 If you find this repository useful, please consider giving a star :star: and citation :t-rex::
-
 ```
-@misc{oquab2023dinov2,
-  title={DINOv2: Learning Robust Visual Features without Supervision},
-  author={Oquab, Maxime and Darcet, Timothée and Moutakanni, Theo and Vo, Huy V. and Szafraniec, Marc and Khalidov, Vasil and Fernandez, Pierre and Haziza, Daniel and Massa, Francisco and El-Nouby, Alaaeldin and Howes, Russell and Huang, Po-Yao and Xu, Hu and Sharma, Vasu and Li, Shang-Wen and Galuba, Wojciech and Rabbat, Mike and Assran, Mido and Ballas, Nicolas and Synnaeve, Gabriel and Misra, Ishan and Jegou, Herve and Mairal, Julien and Labatut, Patrick and Joulin, Armand and Bojanowski, Piotr},
-  journal={arXiv:2304.07193},
-  year={2023}
-}
-```
-
-```
-@misc{darcet2023vitneedreg,
-  title={Vision Transformers Need Registers},
-  author={Darcet, Timothée and Oquab, Maxime and Mairal, Julien and Bojanowski, Piotr},
-  journal={arXiv:2309.16588},
-  year={2023}
+@inproceedings{caron2021emerging,
+  title={Emerging Properties in Self-Supervised Vision Transformers},
+  author={Caron, Mathilde and Touvron, Hugo and Misra, Ishan and J\'egou, Herv\'e  and Mairal, Julien and Bojanowski, Piotr and Joulin, Armand},
+  booktitle={Proceedings of the International Conference on Computer Vision (ICCV)},
+  year={2021}
 }
 ```
