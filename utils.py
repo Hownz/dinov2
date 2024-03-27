@@ -429,7 +429,7 @@ def is_dist_avail_and_initialized():
 
 
 def get_world_size():
-    if not is_dist_avail_and_initialized():
+    if not is_dist_avail_and_initialized(): # 分布式
         return 1
     return dist.get_world_size()
 
@@ -611,10 +611,12 @@ class MultiCropWrapper(nn.Module):
         # convert to list
         if not isinstance(x, list): 
             x = [x]
+        x = [im.to('cuda:1') for im in x] 
         idx_crops = torch.cumsum(input=torch.unique_consecutive(torch.tensor([inp.shape[-1] for inp in x]),
                                                                 return_counts=True,)[1], # 用于获取这些大小中连续相同值的唯一值，
                                                                                          # 并返回这些唯一值及其出现次数。
                                  dim=0) # 对这些唯一值出现次数的列表进行累积求和，得到每个唯一值在累积和中的索引。
+        
         start_idx, output = 0, torch.empty(0).to(x[0].device)
         for end_idx in idx_crops:
             # 含义是将x[start_idx: end_idx]中的所有元素按照第一个维度拼接起来

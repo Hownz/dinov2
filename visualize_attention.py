@@ -104,7 +104,7 @@ if __name__ == '__main__':
         help="Path to pretrained weights to load.")
     parser.add_argument("--checkpoint_key", default="teacher", type=str,
         help='Key to use in the checkpoint (example: "teacher")')
-    parser.add_argument("--image_path", default=None, type=str, help="Path of the image to load.")
+    parser.add_argument("--image_path", default='PCB/PCB1/Image_20231121103732690.png', type=str, help="Path of the image to load.")
     parser.add_argument("--image_size", default=(480, 480), type=int, nargs="+", help="Resize image.")
     parser.add_argument('--output_dir', default='.', help='Path where to save visualizations.')
     parser.add_argument("--threshold", type=float, default=None, help="""We visualize masks

@@ -34,6 +34,9 @@ import utils
 import vision_transformer as vits
 from vision_transformer import DINOHead
 
+use_cuda = torch.cuda.is_available()
+device = torch.device('cuda:1' if use_cuda else 'cpu')
+
 torchvision_archs = sorted(name for name in torchvision_models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(torchvision_models.__dict__[name]))
@@ -87,7 +90,7 @@ def get_args_parser():
     parser.add_argument('--clip_grad', type=float, default=3.0, help="""Maximal parameter
         gradient norm if using gradient clipping. Clipping with norm .3 ~ 1.0 can
         help optimization for larger ViT architectures. 0 for disabling.""")
-    parser.add_argument('--batch_size_per_gpu', default=64, type=int,
+    parser.add_argument('--batch_size_per_gpu', default=12, type=int,
         help='Per-GPU batch-size : number of distinct images loaded on one GPU.')
     parser.add_argument('--epochs', default=100, type=int, help='Number of epochs of training.')
     parser.add_argument('--freeze_last_layer', default=1, type=int, help="""Number of epochs
@@ -117,12 +120,12 @@ def get_args_parser():
         Used for small local view cropping of multi-crop.""")
 
     # Misc
-    parser.add_argument('--data_path', default='/path/to/imagenet/train/', type=str,
+    parser.add_argument('--data_path', default='PCB', type=str, # /path/to/imagenet/train/
         help='Please specify path to the ImageNet training data.')
     parser.add_argument('--output_dir', default=".", type=str, help='Path to save logs and checkpoints.')
     parser.add_argument('--saveckp_freq', default=20, type=int, help='Save checkpoint every x epochs.')
     parser.add_argument('--seed', default=0, type=int, help='Random seed.')
-    parser.add_argument('--num_workers', default=10, type=int, help='Number of data loading workers per GPU.')
+    parser.add_argument('--num_workers', default=6, type=int, help='Number of data loading workers per GPU.')
     parser.add_argument("--dist_url", default="env://", type=str, help="""url used to set up
         distributed training; see https://pytorch.org/docs/stable/distributed.html""")
     parser.add_argument("--local_rank", default=0, type=int, help="Please ignore and do not set this argument.")
@@ -260,7 +263,8 @@ def train_one_epoch(args,
                 param_group["weight_decay"] = wd_schedule[it]
 
         # move images to gpu
-        images = [im.cuda(non_blocking=True) for im in images]
+        # images = [im.cuda(non_blocking=True) for im in images] 
+        images = [im.to(device) for im in images] 
         # teacher and student forward passes + compute dino loss
         with torch.cuda.amp.autocast(fp16_scaler is not None): # 混合精度训练
             teacher_output = teacher(images[:2])  # only the 2 global views pass through the teacher
@@ -320,7 +324,7 @@ def train_dino(args):
         local_crops_scale=args.local_crops_scale, # 代表局部crop的scale
         local_crops_number=args.local_crops_number, # 代表局部crop的数量
     )
-    dataset = datasets.ImageFolder(args.data_path, transform=transform)
+    dataset = datasets.ImageFolder(root=args.data_path, transform=transform)
     sampler = torch.utils.data.DistributedSampler(dataset, shuffle=True)
     data_loader = torch.utils.data.DataLoader(
         dataset,
@@ -372,7 +376,7 @@ def train_dino(args):
                  args.use_bn_in_head),
     )
     # move networks to gpu
-    student, teacher = student.cuda(), teacher.cuda()
+    student, teacher = student.to(device), teacher.to(device)
     # synchronize batch norms (if any)
     if utils.has_batchnorms(student):
         # nn.SyncBatchNorm.convert_sync_batchnorm 代表是将batchnorm转换为sync batchnorm，目的是为了在多GPU训练时保持batchnorm的一致性
@@ -401,7 +405,7 @@ def train_dino(args):
         warmup_teacher_temp=args.warmup_teacher_temp,
         teacher_temp=args.teacher_temp,
         warmup_teacher_temp_epochs=args.warmup_teacher_temp_epochs,
-    ).cuda()
+    ).to(device)
 
     # ============ preparing optimizer ... ============
     params_groups = utils.get_params_groups(student)
@@ -484,15 +488,6 @@ def train_dino(args):
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
     print('Training time {}'.format(total_time_str))
-
-
-
-
-
-
-
-
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('DINO', parents=[get_args_parser()])
